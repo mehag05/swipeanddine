@@ -197,13 +197,12 @@ export default function RestaurantTest() {
           cuisineCategory: cuisine
         };
       });
-
       // Filter out 'Other' category
-      const validRestaurants = categorizedRestaurants.filter(r => r.cuisineCategory !== 'Other');
+      const validRestaurants = categorizedRestaurants.filter((r: Restaurant) => r.cuisineCategory !== 'Other');
       console.log('Valid restaurants after filtering:', validRestaurants.length);
 
       // Get unique cuisines
-      const uniqueCuisines = Array.from(new Set(validRestaurants.map(r => r.cuisineCategory)))
+      const uniqueCuisines = Array.from(new Set(validRestaurants.map((r: Restaurant) => r.cuisineCategory)))
         .filter(Boolean);
       console.log('Final unique cuisines:', uniqueCuisines);
 
