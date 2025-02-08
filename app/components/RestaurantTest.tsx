@@ -307,7 +307,7 @@ export default function RestaurantTest() {
         <Text>Getting your location...</Text>
       ) : (
         <Text style={styles.locationText}>
-          Location: {userLocation.coords.latitude.toFixed(4)}, {userLocation.coords.longitude.toFixed(4)}
+          We'll find the restaurants around you.
         </Text>
       )}
       
@@ -321,8 +321,8 @@ export default function RestaurantTest() {
           maximumValue={50000}    // About 31 miles (max Google Places radius)
           value={searchRadius}
           onValueChange={setSearchRadius}
-          minimumTrackTintColor="#2196F3"
-          maximumTrackTintColor="#000000"
+          minimumTrackTintColor="#DA291C"
+          maximumTrackTintColor="#F3D677"
           step={1609}  // 1 mile increments
         />
         <View style={styles.sliderLabels}>
@@ -461,22 +461,26 @@ export default function RestaurantTest() {
   }
 }
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
+    backgroundColor: '#f4f4f4', // Soft background color
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
+    color: '#333', // Darker color for text
   },
   question: {
     fontSize: 20,
     marginBottom: 20,
     textAlign: 'center',
+    color: '#333',
   },
   choicesContainer: {
     width: '100%',
@@ -492,6 +496,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    marginBottom: 20,
   },
   image: {
     width: '100%',
@@ -515,23 +520,53 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   radiusContainer: {
-    width: '80%',
+    width: '90%', // Adjusted width for better proportion
     marginVertical: 20,
     alignItems: 'center',
+    backgroundColor: '#fff', // Added background for contrast
+    padding: 15,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 4,
   },
   radiusLabel: {
     fontSize: 18,
     marginBottom: 10,
+    fontWeight: 'bold',
+    color: '#333', // Darker label color for readability
   },
   slider: {
     width: '100%',
     height: 40,
+    marginVertical: 15,
+    borderRadius: 10, // Smooth slider
+  },
+  sliderTrack: {
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#ddd', // Light track background
+  },
+  sliderThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#F3D677', // Thumb color for contrast
   },
   sliderLabels: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 10,
+    color: '#333',
+  },
+  valueLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 10,
+    color: '#333',
   },
   matchupContainer: {
     flexDirection: 'row',
@@ -548,10 +583,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginHorizontal: 10,
+    color: '#333',
   },
   roundInfo: {
     fontSize: 16,
     marginBottom: 10,
+    color: '#333',
   },
   remainingInfo: {
     fontSize: 14,

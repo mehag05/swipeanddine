@@ -9,7 +9,7 @@ const BudgetScreen = () => {
 
   const handleContinue = () => {
     if (Number(budget) > 0) {
-      router.push('/(screens)/mood')
+      router.push('/components/RestaurantTest')
     }
   };
 
@@ -29,6 +29,7 @@ const BudgetScreen = () => {
         keyboardType="numeric"
         value={budget}
         onChangeText={setBudget}
+        placeholder='__ __ __'
         placeholderTextColor="#ccc"
       />
       <Text style={styles.description}>

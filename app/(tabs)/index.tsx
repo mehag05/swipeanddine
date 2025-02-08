@@ -1,5 +1,5 @@
 import { View, Text } from 'react-native';
-import RestaurantTest from '../(screens)/RestaurantTest';
+import RestaurantTest from '../components/RestaurantTest';
 export default function Home() {
   return (
     <RestaurantTest />

@@ -31,7 +31,7 @@ export default function SignIn() {
         
         <TouchableOpacity 
           style={styles.signInButton}
-          onPress={() => router.push('/(auth)/create-account')}
+          onPress={() => router.push('/(screens)/home')}
         >
           <Text style={styles.signInButtonText}>SIGN IN WITH PHONE NUMBER</Text>
         </TouchableOpacity>
