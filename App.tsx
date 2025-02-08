@@ -1,4 +1,8 @@
-import { RestaurantTest } from '@/app/components/RestaurantTest';
+import RestaurantTest from './app/components/RestaurantTest';
+import { View, Text } from 'react-native';
 
-// In your render method or component:
-<RestaurantTest /> 
+export default function App() {
+  return (
+    <RestaurantTest />
+  );
+} 

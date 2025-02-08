@@ -3,8 +3,9 @@ import { View, Text, Button } from 'react-native';
 import LocationService from '../services/LocationService';
 import PlacesService from '../services/PlacesService';
 import { Location, Restaurant } from '../types/restaurant';
+import { GOOGLE_PLACES_API_KEY } from '@env';
 
-export function RestaurantTest() {
+export default function RestaurantTest() {
   const [location, setLocation] = useState<Location | null>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -32,10 +33,23 @@ export function RestaurantTest() {
     }
   };
 
+  const testAPI = async () => {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=37.7749,-122.4194&radius=1500&type=restaurant&key=${GOOGLE_PLACES_API_KEY}`
+      );
+      const data = await response.json();
+      console.log('API Response:', data);
+    } catch (error) {
+      console.error('API Error:', error);
+    }
+  };
+
   return (
     <View style={{ padding: 20 }}>
       <Button title="Test Location" onPress={testLocation} />
       <Button title="Test Restaurants" onPress={testRestaurants} />
+      <Button title="Test API" onPress={testAPI} />
       
       {error && <Text style={{ color: 'red' }}>{error}</Text>}
       
