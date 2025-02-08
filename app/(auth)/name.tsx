@@ -42,7 +42,7 @@ export default function NameInput() {
           onPress={() => router.push('/(screens)/home')}
         >
           <LinearGradient
-            colors={['#FFB75E', '#E75480']}
+            colors={['#E75480', '#E75480']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.gradient}

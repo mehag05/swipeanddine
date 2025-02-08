@@ -61,8 +61,6 @@ export default function MatchSuccess() {
           </View>
         </View>
 
-
-
         {/* Buttons */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity 
@@ -74,7 +72,7 @@ export default function MatchSuccess() {
 
           <TouchableOpacity 
   style={styles.matchAgainButton}
-  onPress={() => router.push('../(screens)/budget')}
+  onPress={() => router.push('../components/Restaurant')}
 >
   <Text style={styles.matchAgainButtonText}>Match Me Again</Text>
 </TouchableOpacity>
