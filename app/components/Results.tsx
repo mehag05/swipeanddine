@@ -13,10 +13,10 @@ export const Results = ({ likedRestaurants, onRestart }: ResultsProps) => (
     <Text style={styles.title}>Your Matches</Text>
     <ScrollView style={styles.scrollView}>
       {likedRestaurants.map((restaurant) => (
-        <View key={restaurant.id} style={styles.restaurantCard}>
+        <View key={restaurant.place_id || restaurant.id} style={styles.restaurantCard}>
           {restaurant.photos?.[0]?.photo_reference && (
             <Image
-              source={{ uri: getPhotoUrl(restaurant.photos[0].photo_reference) }}
+              source={{ uri: getPhotoUrl(restaurant.photos[0]!.photo_reference) }}
               style={styles.thumbnail}
             />
           )}
