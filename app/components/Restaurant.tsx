@@ -7,21 +7,9 @@ import * as Location from 'expo-location';
 import Slider from '@react-native-community/slider';
 import { Results } from './Results';
 import { router } from 'expo-router';
+import { Restaurant } from '../types/restaurant';
 const { width } = Dimensions.get('window');
 
-interface Restaurant {
-  name: string;
-  types: string[];
-  photos?: { photo_reference: string }[];
-  vicinity: string;
-  location_id: string;
-  address: string;
-  cuisineCategory?: string;
-  distance: number;
-  rating?: number;
-  price_level?: number;
-  place_id: string;
-}
 
 interface Location {
   latitude: number;
@@ -465,7 +453,7 @@ export default function RestaurantTest() {
           {filteredRestaurants[currentRestaurantIndex].photos?.[0]?.photo_reference ? (
             <Image
               source={{
-                uri: getPhotoUrl(filteredRestaurants[currentRestaurantIndex].photos[0].photo_reference)
+                uri: getPhotoUrl(filteredRestaurants[currentRestaurantIndex].photos![0].photo_reference)
               }}
               style={styles.restaurantImage}
             />
@@ -736,13 +724,13 @@ const styles = StyleSheet.create({
   sliderTrack: {
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#ddd', // Light track background
+    backgroundColor: '#FFFFFF', // Light track background
   },
   sliderThumb: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#F3D677', // Thumb color for contrast
+    backgroundColor: '#FFFFF', // Thumb color for contrast
   },
   sliderLabels: {
     width: '100%',
