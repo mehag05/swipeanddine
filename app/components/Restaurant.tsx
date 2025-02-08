@@ -6,10 +6,21 @@ import OpenAIService from '../services/OpenAIService';
 import * as Location from 'expo-location';
 import Slider from '@react-native-community/slider';
 import { Results } from './Results';
-import { router } from 'expo-router';
-import { Restaurant } from '../types/restaurant';
 const { width } = Dimensions.get('window');
 
+interface Restaurant {
+  name: string;
+  types: string[];
+  photos?: { photo_reference: string }[];
+  vicinity: string;
+  location_id: string;
+  address: string;
+  cuisineCategory?: string;
+  distance: number;
+  rating?: number;
+  price_level?: number;
+  place_id: string;
+}
 
 interface Location {
   latitude: number;
@@ -40,15 +51,9 @@ export default function RestaurantTest() {
   const [priceLevel, setPriceLevel] = useState<number | null>(null);
   const [likedRestaurants, setLikedRestaurants] = useState<Restaurant[]>([]);
 
-  const handleBack = () => {
-    router.back();
-  };
-
-
   useEffect(() => {
     getUserLocation();
   }, []);
-  
 
   const getUserLocation = async () => {
     try {
@@ -307,20 +312,17 @@ export default function RestaurantTest() {
 
   const renderStartScreen = () => (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-        <Text style={styles.backArrow}>←</Text>
-      </TouchableOpacity>
       <Text style={styles.title}>Restaurant Finder</Text>
       
-      {locationError ? (
+      {/* {locationError ? (
         <Text style={styles.errorText}>{locationError}</Text>
       ) : !userLocation ? (
         <Text>Getting your location...</Text>
       ) : (
         <Text style={styles.locationText}>
-          We'll find the restaurants around you.
+          Location: {userLocation.coords.latitude.toFixed(4)}, {userLocation.coords.longitude.toFixed(4)}
         </Text>
-      )}
+      )} */}
       
       <View style={styles.radiusContainer}>
         <Text style={styles.radiusLabel}>
@@ -332,9 +334,8 @@ export default function RestaurantTest() {
           maximumValue={50000}    // About 31 miles (max Google Places radius)
           value={searchRadius}
           onValueChange={setSearchRadius}
-          disabled={isLoading}
-          minimumTrackTintColor="#DA291C"
-          maximumTrackTintColor="#F3D677"
+          minimumTrackTintColor="#EA4080"
+          maximumTrackTintColor="#000000"
           step={1609}  // 1 mile increments
         />
         <View style={styles.sliderLabels}>
@@ -353,20 +354,20 @@ export default function RestaurantTest() {
           </Text>
         </View>
       ) : (
+        <View style={styles.nextButtonContainer}>
         <Button 
           title="Find Restaurants" 
           onPress={startGame}
+          color="#fff"
           disabled={!userLocation || !!locationError}
         />
+        </View>
       )}
     </View>
   );
 
   const renderBudgetSelection = () => (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-        <Text style={styles.backArrow}>←</Text>
-      </TouchableOpacity>
       <Text style={styles.question}>What's your budget?</Text>
       <View style={styles.budgetContainer}>
         <TouchableOpacity 
@@ -420,27 +421,35 @@ export default function RestaurantTest() {
     <View style={styles.container}>
       {currentMatch && (
         <>
-          <Text style={styles.question}>Which cuisine do you prefer?</Text>
-          <Text style={styles.roundInfo}>Round {tournamentRound}</Text>
-          <View style={styles.matchupContainer}>
-            <TouchableOpacity style={styles.cuisineOption1} onPress={() => selectWinner(currentMatch.option1)}>
-              <Text style={styles.optionBtn}>{currentMatch.option1}</Text>
-            </TouchableOpacity>
-            <Text style={styles.vsText}>VS</Text>
-            <TouchableOpacity style={styles.cuisineOption2} onPress={() => selectWinner(currentMatch.option2)}>
-              <Text style={styles.optionBtn}>{currentMatch.option2}</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.remainingInfo}>
-            {winningCuisines.length} cuisines remaining
-          </Text>
+            <Text style={styles.question}>Which cuisine do you prefer?</Text>
+            <Text style={styles.roundInfo}>Round {tournamentRound}</Text>
+            <View style={styles.matchupContainer}>
+              <View style={styles.cuisineOption}>
+                <Button
+                  title={currentMatch.option1}
+                  color="white"
+                  onPress={() => selectWinner(currentMatch.option1)}
+                />
+              </View>
+              <Text style={styles.vsText}>VS</Text>
+              <View style={styles.cuisineOption}>
+                <Button
+                  title={currentMatch.option2}
+                  color="white"
+                  onPress={() => selectWinner(currentMatch.option2)}
+                />
+              </View>
+            </View>
+            <Text style={styles.remainingInfo}>
+              {winningCuisines.length} cuisines remaining
+            </Text>
         </>
       )}
     </View>
   );
 
   const renderRestaurantList = () => (
-    <View style={styles.container}>
+    <View style={styles.subcontainer}>
       <View style={styles.topBar}>
         <Image 
           source={require('../assets/images/icon.png')}  // Add your app logo
@@ -453,7 +462,7 @@ export default function RestaurantTest() {
           {filteredRestaurants[currentRestaurantIndex].photos?.[0]?.photo_reference ? (
             <Image
               source={{
-                uri: getPhotoUrl(filteredRestaurants[currentRestaurantIndex].photos![0].photo_reference)
+                uri: getPhotoUrl(filteredRestaurants[currentRestaurantIndex].photos[0].photo_reference)
               }}
               style={styles.restaurantImage}
             />
@@ -528,7 +537,13 @@ export default function RestaurantTest() {
       return null;
   }
 }
+
 const styles = StyleSheet.create({
+  subcontainer: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  
   container: {
     flex: 1,
     alignItems: 'center',
@@ -637,8 +652,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  cuisineOption1: {
-    padding: 10,
+  cuisineOption: {
+    backgroundColor: '#EA4080',
+    paddingTop: 20,
+    paddingBottom: 20,
+    margin: 10,
     borderRadius: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -647,48 +665,15 @@ const styles = StyleSheet.create({
     elevation: 5,
     width: '40%',
     alignItems: 'center',
-    justifyContent: 'center', // Ensure text is centered
-    flexDirection: 'row',  // Ensures text and icon (if any) are centered horizontally
-    minHeight: 100,  
-    backgroundColor: '#FF959F', // Soft yellow for option 1
-  },
-
-  // Option 2 button style, extending the baseCuisineOption style
-  cuisineOption2: {
-    padding: 10,
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    width: '40%',
-    alignItems: 'center',
-    justifyContent: 'center', // Ensure text is centered
-    flexDirection: 'row',  // Ensures text and icon (if any) are centered horizontally
-    minHeight: 100,  
-    backgroundColor: '#EA4080', // Red for option 2
-  },
-
-  // Text style for the options inside the buttons
-  optionBtn: {
-    fontSize: 18,  // Default font size for readability
-    fontWeight: 'bold',
-    color: 'white',  // White text to contrast with the background
-    textAlign: 'center',  // Ensure the text is centered
-    paddingHorizontal: 10,  // Add horizontal padding for better spacing
-    flexWrap: 'wrap', // Allow text to wrap if it's too long
-    flex: 1, // Allow the text to adapt within the container width
   },
   vsText: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#666',
-    margin: 10
   },
-
   roundInfo: {
     fontSize: 16,
+    fontWeight: 'bold',
     marginBottom: 10,
   },
   remainingInfo: {
@@ -712,8 +697,20 @@ const styles = StyleSheet.create({
   radiusLabel: {
     fontSize: 18,
     marginBottom: 10,
-    fontWeight: 'bold',
     color: '#333', // Darker label color for readability
+  },
+  nextButtonContainer: {
+    width: '70%', // Adjusted width for better proportion
+    marginVertical: 15,
+    alignItems: 'center',
+    backgroundColor: '#EA4080', // Added background for contrast
+    padding: 10,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 4,
   },
   slider: {
     width: '100%',
@@ -724,13 +721,13 @@ const styles = StyleSheet.create({
   sliderTrack: {
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#FFFFFF', // Light track background
+    backgroundColor: '#ddd', 
   },
   sliderThumb: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#FFFFF', // Thumb color for contrast
+    backgroundColor: '#F3D677', // Thumb color for contrast
   },
   sliderLabels: {
     width: '100%',
@@ -793,10 +790,7 @@ const styles = StyleSheet.create({
   },
   budgetOption: {
     backgroundColor: 'white',
-    paddingTop: 20,
-    paddingBottom: 20,
-    paddingLeft: 40,
-    paddingRight: 40,
+    padding: 20,
     borderRadius: 12,
     alignItems: 'center',
     borderWidth: 1,
@@ -815,14 +809,5 @@ const styles = StyleSheet.create({
   budgetDescription: {
     fontSize: 16,
     color: '#666',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-  },
-  backArrow: {
-    fontSize: 24,
-    color: '#000',
   },
 });
