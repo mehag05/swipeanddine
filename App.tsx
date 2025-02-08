@@ -1,4 +1,4 @@
-import RestaurantTest from './app/components/RestaurantTest';
+import RestaurantTest from './app/components/Restaurant';
 import { View, Text } from 'react-native';
 
 export default function App() {
