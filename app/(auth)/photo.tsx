@@ -7,6 +7,8 @@ import { useRouter } from 'expo-router';
 export default function ProfilePhoto() {
   const router = useRouter();
 
+
+  // onPress={() => router.push('/(screens)/home')}
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />

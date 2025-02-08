@@ -39,9 +39,10 @@ export default function NameInput() {
         <TouchableOpacity 
           style={[styles.continueButton, !name && styles.continueButtonDisabled]}
           disabled={!name}
+          onPress={() => router.push('/(screens)/home')}
         >
           <LinearGradient
-            colors={['#FFB75E', '#ED8F03']}
+            colors={['#FFB75E', '#E75480']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.gradient}
@@ -55,6 +56,7 @@ export default function NameInput() {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

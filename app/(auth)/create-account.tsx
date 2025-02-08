@@ -28,10 +28,10 @@ export default function CreateAccount() {
         <FontAwesome name="cutlery" size={80} color="#E75480" style={styles.icon} />
         <Text style={styles.oopsText}>Oops!</Text>
         <Text style={styles.message}>
-          We couldn't find a Swipe&Dine account connected to that Facebook Account.
+          We couldn't find a Swipe&Dine account connected to that phone number.
         </Text>
         
-        <TouchableOpacity style={styles.createButton} onPress={handleBudget} >
+        <TouchableOpacity style={styles.createButton} onPress={() => router.push('/(auth)/name')} >
           <Text style={styles.buttonText}>CREATE NEW ACCOUNT</Text>
         </TouchableOpacity>
       </View>
