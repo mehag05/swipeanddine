@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import styles from './styles'; 
-import { LinearGradient } from 'react-native-linear-gradient';
 import { useRouter } from 'expo-router';
 
 const BudgetScreen = () => {
