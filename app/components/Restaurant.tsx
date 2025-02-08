@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, Image, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Button, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { GOOGLE_PLACES_API_KEY } from '@env';
 import CuisineService from '../services/CuisineService';
 import OpenAIService from '../services/OpenAIService';
 import * as Location from 'expo-location';
 import Slider from '@react-native-community/slider';
+import { Results } from './Results';
+import { router } from 'expo-router';
 const { width } = Dimensions.get('window');
 
 interface Restaurant {
@@ -32,7 +34,7 @@ interface CuisineMatch {
 }
 
 export default function RestaurantTest() {
-  const [gameStage, setGameStage] = useState<'start' | 'cuisine' | 'restaurant'>('start');
+  const [gameStage, setGameStage] = useState<'start' | 'cuisine' | 'restaurant' | 'budget' | 'results'>('budget');
   const [cuisineChoices, setCuisineChoices] = useState<string[]>([]);
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -47,10 +49,18 @@ export default function RestaurantTest() {
   const [tournamentRound, setTournamentRound] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState('');
+  const [priceLevel, setPriceLevel] = useState<number | null>(null);
+  const [likedRestaurants, setLikedRestaurants] = useState<Restaurant[]>([]);
+
+  const handleBack = () => {
+    router.back();
+  };
+
 
   useEffect(() => {
     getUserLocation();
   }, []);
+  
 
   const getUserLocation = async () => {
     try {
@@ -177,9 +187,14 @@ export default function RestaurantTest() {
 
       console.log('Total unique restaurants:', allResults.length);
 
+      // Filter restaurants by price level if set
+      const priceFilteredResults = priceLevel 
+        ? allResults.filter((r: Restaurant) => r.price_level === priceLevel)
+        : allResults;
+      
       // Use CuisineService for categorization
       setLoadingStatus('Categorizing restaurants...');
-      const cuisineMap = CuisineService.categorizeBatch(allResults);
+      const cuisineMap = CuisineService.categorizeBatch(priceFilteredResults);
 
       // Log cuisine distribution
       const cuisineDistribution: { [key: string]: number } = {};
@@ -189,7 +204,7 @@ export default function RestaurantTest() {
       console.log('Cuisine Distribution:', cuisineDistribution);
 
       // Store categorized restaurants
-      const categorizedRestaurants = allResults.map((restaurant: Restaurant) => {
+      const categorizedRestaurants = priceFilteredResults.map((restaurant: Restaurant) => {
         const cuisine = cuisineMap.get(restaurant.place_id);
         console.log(`Categorized ${restaurant.name} as ${cuisine}`);
         return {
@@ -297,8 +312,16 @@ export default function RestaurantTest() {
     return `${miles.toFixed(1)} miles`;
   };
 
+  const handleLike = (restaurant: Restaurant) => {
+    setLikedRestaurants(prev => [...prev, restaurant]);
+    setCurrentRestaurantIndex(i => i + 1);
+  };
+
   const renderStartScreen = () => (
     <View style={styles.container}>
+      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+        <Text style={styles.backArrow}>←</Text>
+      </TouchableOpacity>
       <Text style={styles.title}>Restaurant Finder</Text>
       
       {locationError ? (
@@ -321,6 +344,7 @@ export default function RestaurantTest() {
           maximumValue={50000}    // About 31 miles (max Google Places radius)
           value={searchRadius}
           onValueChange={setSearchRadius}
+          disabled={isLoading}
           minimumTrackTintColor="#DA291C"
           maximumTrackTintColor="#F3D677"
           step={1609}  // 1 mile increments
@@ -350,6 +374,60 @@ export default function RestaurantTest() {
     </View>
   );
 
+  const renderBudgetSelection = () => (
+    <View style={styles.container}>
+      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+        <Text style={styles.backArrow}>←</Text>
+      </TouchableOpacity>
+      <Text style={styles.question}>What's your budget?</Text>
+      <View style={styles.budgetContainer}>
+        <TouchableOpacity 
+          style={[styles.budgetOption, priceLevel === 1 && styles.selectedBudget]}
+          onPress={() => {
+            setPriceLevel(1);
+            setGameStage('start');  // Go to radius selection screen
+          }}
+        >
+          <Text style={styles.budgetText}>$</Text>
+          <Text style={styles.budgetDescription}>Inexpensive</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.budgetOption, priceLevel === 2 && styles.selectedBudget]}
+          onPress={() => {
+            setPriceLevel(2);
+            setGameStage('start');  // Go to radius selection screen
+          }}
+        >
+          <Text style={styles.budgetText}>$$</Text>
+          <Text style={styles.budgetDescription}>Moderate</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.budgetOption, priceLevel === 3 && styles.selectedBudget]}
+          onPress={() => {
+            setPriceLevel(3);
+            setGameStage('start');  // Go to radius selection screen
+          }}
+        >
+          <Text style={styles.budgetText}>$$$</Text>
+          <Text style={styles.budgetDescription}>Expensive</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.budgetOption, priceLevel === 4 && styles.selectedBudget]}
+          onPress={() => {
+            setPriceLevel(4);
+            setGameStage('start');  // Go to radius selection screen
+          }}
+        >
+          <Text style={styles.budgetText}>$$$$</Text>
+          <Text style={styles.budgetDescription}>Very Expensive</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   const renderCuisineChoice = () => (
     <View style={styles.container}>
       {currentMatch && (
@@ -357,19 +435,13 @@ export default function RestaurantTest() {
           <Text style={styles.question}>Which cuisine do you prefer?</Text>
           <Text style={styles.roundInfo}>Round {tournamentRound}</Text>
           <View style={styles.matchupContainer}>
-            <View style={styles.cuisineOption}>
-              <Button
-                title={currentMatch.option1}
-                onPress={() => selectWinner(currentMatch.option1)}
-              />
-            </View>
+            <TouchableOpacity style={styles.cuisineOption1} onPress={() => selectWinner(currentMatch.option1)}>
+              <Text style={styles.optionBtn}>{currentMatch.option1}</Text>
+            </TouchableOpacity>
             <Text style={styles.vsText}>VS</Text>
-            <View style={styles.cuisineOption}>
-              <Button
-                title={currentMatch.option2}
-                onPress={() => selectWinner(currentMatch.option2)}
-              />
-            </View>
+            <TouchableOpacity style={styles.cuisineOption2} onPress={() => selectWinner(currentMatch.option2)}>
+              <Text style={styles.optionBtn}>{currentMatch.option2}</Text>
+            </TouchableOpacity>
           </View>
           <Text style={styles.remainingInfo}>
             {winningCuisines.length} cuisines remaining
@@ -381,70 +453,67 @@ export default function RestaurantTest() {
 
   const renderRestaurantList = () => (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        {filteredRestaurants.length} {winningCuisines[0]} Restaurants Found
-      </Text>
+      <View style={styles.topBar}>
+        <Image 
+          source={require('../assets/images/icon.png')}  // Add your app logo
+          style={styles.logo} 
+        />
+      </View>
       
-      {filteredRestaurants.length > 0 ? (
-        <View style={styles.restaurantContainer}>
-          {currentRestaurantIndex < filteredRestaurants.length && (
-            <View style={styles.card}>
-              {filteredRestaurants[currentRestaurantIndex].photos?.[0]?.photo_reference && (
-                <Image
-                  source={{
-                    uri: `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${filteredRestaurants[currentRestaurantIndex].photos[0].photo_reference}&key=${GOOGLE_PLACES_API_KEY}`
-                  }}
-                  style={styles.restaurantImage}
-                />
-              )}
-              
-              <View style={styles.restaurantInfo}>
-                <Text style={styles.restaurantName}>
-                  {filteredRestaurants[currentRestaurantIndex].name}
-                </Text>
-                <Text style={styles.restaurantAddress}>
-                  {filteredRestaurants[currentRestaurantIndex].address}
-                </Text>
-                {filteredRestaurants[currentRestaurantIndex].rating && (
-                  <Text style={styles.rating}>
-                    Rating: {filteredRestaurants[currentRestaurantIndex].rating} ⭐️
-                  </Text>
-                )}
-                {filteredRestaurants[currentRestaurantIndex].price_level && (
-                  <Text style={styles.price}>
-                    {filteredRestaurants[currentRestaurantIndex].price_level}
-                  </Text>
-                )}
-              </View>
-
-              <View style={styles.buttonContainer}>
-                <Button 
-                  title="👎 Skip" 
-                  onPress={() => setCurrentRestaurantIndex(i => i + 1)}
-                />
-                <Button 
-                  title="👍 Like" 
-                  onPress={() => {
-                    // Handle liked restaurant
-                    console.log('Liked:', filteredRestaurants[currentRestaurantIndex].name);
-                  }}
-                />
-              </View>
-            </View>
+      {filteredRestaurants.length > 0 && currentRestaurantIndex < filteredRestaurants.length ? (
+        <View style={styles.card}>
+          {filteredRestaurants[currentRestaurantIndex].photos?.[0]?.photo_reference ? (
+            <Image
+              source={{
+                uri: getPhotoUrl(filteredRestaurants[currentRestaurantIndex].photos[0].photo_reference)
+              }}
+              style={styles.restaurantImage}
+            />
+          ) : (
+            <View style={[styles.restaurantImage, { backgroundColor: '#f0f0f0' }]} />
           )}
-
-          {currentRestaurantIndex >= filteredRestaurants.length && (
-            <View style={styles.endMessage}>
-              <Text>No more restaurants to show!</Text>
-              <Button title="Start Over" onPress={() => setGameStage('start')} />
+          
+          <View style={styles.restaurantInfo}>
+            <Text style={styles.restaurantName}>
+              {filteredRestaurants[currentRestaurantIndex].name}
+            </Text>
+            
+            <View style={styles.cuisineTag}>
+              <Text style={styles.cuisineText}>
+                {filteredRestaurants[currentRestaurantIndex].cuisineCategory}
+              </Text>
             </View>
-          )}
+
+            <Text style={styles.restaurantAddress}>
+              {filteredRestaurants[currentRestaurantIndex].vicinity}
+            </Text>
+          </View>
+
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.skipButton]}
+              onPress={() => setCurrentRestaurantIndex(i => i + 1)}
+            >
+              <Text style={styles.buttonText}>✕</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.likeButton]}
+              onPress={() => handleLike(filteredRestaurants[currentRestaurantIndex])}
+            >
+              <Text style={styles.buttonText}>♥</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       ) : (
-        <View style={styles.noResults}>
-          <Text>No restaurants found for this cuisine.</Text>
-          <Button title="Try Again" onPress={() => setGameStage('start')} />
-        </View>
+        <Results 
+          likedRestaurants ={likedRestaurants as any[]} 
+          onRestart={() => {
+            setGameStage('budget');
+            setLikedRestaurants([]);
+            setCurrentRestaurantIndex(0);
+          }} 
+        />
       )}
     </View>
   );
@@ -452,16 +521,25 @@ export default function RestaurantTest() {
   switch (gameStage) {
     case 'start':
       return renderStartScreen();
+    case 'budget':
+      return renderBudgetSelection();
     case 'cuisine':
       return renderCuisineChoice();
     case 'restaurant':
       return renderRestaurantList();
+    case 'results':
+      return <Results 
+        likedRestaurants={likedRestaurants as any[]} 
+        onRestart={() => {
+          setGameStage('budget');
+          setLikedRestaurants([]);
+          setCurrentRestaurantIndex(0);
+        }} 
+      />;
     default:
       return null;
   }
 }
-
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -474,50 +552,161 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#333', // Darker color for text
   },
   question: {
     fontSize: 20,
     marginBottom: 20,
     textAlign: 'center',
-    color: '#333',
   },
   choicesContainer: {
     width: '100%',
     gap: 10,
   },
   card: {
-    width: width - 40,
+    flex: 1,
+    margin: 0,
+    padding: 0,
+  },
+  restaurantImage: {
+    width: '100%',
+    height: '100%',  // Full screen image
+    resizeMode: 'cover',
+  },
+  restaurantInfo: {
+    position: 'absolute',
+    bottom: 80,
+    left: 0,
+    right: 0,
+    padding: 20,
+    backgroundColor: 'rgba(0,0,0,0.4)',  // Semi-transparent overlay
+  },
+  restaurantName: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 8,
+  },
+  restaurantAddress: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: 8,
+  },
+  cuisineTag: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+  },
+  cuisineText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  rating: {
+    fontSize: 16,
+    color: '#FFB900',
+    marginBottom: 8,
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 20,
     backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 15,
+  },
+  actionButton: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  likeButton: {
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+  },
+  skipButton: {
+    borderWidth: 2,
+    borderColor: '#FF6B6B',
+  },
+  buttonText: {
+    fontSize: 24,
+  },
+  matchupContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    padding: 20,
+  },
+  cuisineOption1: {
+    padding: 10,
+    borderRadius: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    marginBottom: 20,
+    width: '40%',
+    alignItems: 'center',
+    justifyContent: 'center', // Ensure text is centered
+    flexDirection: 'row',  // Ensures text and icon (if any) are centered horizontally
+    minHeight: 100,  
+    backgroundColor: '#FF959F', // Soft yellow for option 1
   },
-  image: {
-    width: '100%',
-    height: 200,
-    borderRadius: 10,
+
+  // Option 2 button style, extending the baseCuisineOption style
+  cuisineOption2: {
+    padding: 10,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    width: '40%',
+    alignItems: 'center',
+    justifyContent: 'center', // Ensure text is centered
+    flexDirection: 'row',  // Ensures text and icon (if any) are centered horizontally
+    minHeight: 100,  
+    backgroundColor: '#EA4080', // Red for option 2
+  },
+
+  // Text style for the options inside the buttons
+  optionBtn: {
+    fontSize: 18,  // Default font size for readability
+    fontWeight: 'bold',
+    color: 'white',  // White text to contrast with the background
+    textAlign: 'center',  // Ensure the text is centered
+    paddingHorizontal: 10,  // Add horizontal padding for better spacing
+    flexWrap: 'wrap', // Allow text to wrap if it's too long
+    flex: 1, // Allow the text to adapt within the container width
+  },
+  vsText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#666',
+    margin: 10
+  },
+
+  roundInfo: {
+    fontSize: 16,
     marginBottom: 10,
   },
-  name: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  address: {
-    fontSize: 16,
+  remainingInfo: {
+    fontSize: 14,
     color: '#666',
-    marginBottom: 15,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 10,
+    marginTop: 20,
   },
   radiusContainer: {
     width: '90%', // Adjusted width for better proportion
@@ -562,72 +751,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     color: '#333',
   },
-  valueLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 10,
-    color: '#333',
-  },
-  matchupContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginVertical: 20,
-  },
-  cuisineOption: {
-    flex: 1,
-    margin: 10,
-  },
-  vsText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginHorizontal: 10,
-    color: '#333',
-  },
-  roundInfo: {
-    fontSize: 16,
-    marginBottom: 10,
-    color: '#333',
-  },
-  remainingInfo: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 20,
-  },
-  restaurantContainer: {
-    flex: 1,
-    width: '100%',
-    padding: 20,
-  },
-  restaurantImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  restaurantInfo: {
-    marginBottom: 15,
-  },
-  restaurantName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  restaurantAddress: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 5,
-  },
-  rating: {
-    fontSize: 16,
-    color: '#f4c430',
-    marginBottom: 5,
-  },
-  price: {
-    fontSize: 16,
-    color: '#2e8b57',
-  },
   endMessage: {
     alignItems: 'center',
     marginTop: 20,
@@ -657,5 +780,61 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     paddingHorizontal: 20,
+  },
+  topBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  logo: {
+    height: 30,
+    width: 30,
+    tintColor: '#FF6B6B',
+  },
+  budgetContainer: {
+    padding: 20,
+    gap: 15,
+  },
+  budgetOption: {
+    backgroundColor: 'white',
+    paddingTop: 20,
+    paddingBottom: 20,
+    paddingLeft: 40,
+    paddingRight: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  selectedBudget: {
+    borderColor: '#FF6B6B',
+    borderWidth: 2,
+  },
+  budgetText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  budgetDescription: {
+    fontSize: 16,
+    color: '#666',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+  },
+  backArrow: {
+    fontSize: 24,
+    color: '#000',
   },
 });

@@ -38,9 +38,8 @@ class PlacesService {
       throw error;
     }
   }
-
   private processRestaurants(restaurants: any[], userLocation: Location): Restaurant[] {
-    return restaurants.map(restaurant => ({
+    return restaurants.map((restaurant: any) => ({
       id: restaurant.place_id,
       name: restaurant.name,
       rating: restaurant.rating,
@@ -51,6 +50,10 @@ class PlacesService {
         : null,
       vicinity: restaurant.vicinity,
       location: restaurant.geometry.location,
+      location_id: restaurant.place_id,
+      address: restaurant.formatted_address,
+      distance: restaurant.distance,
+      place_id: restaurant.place_id,
     }));
   }
 

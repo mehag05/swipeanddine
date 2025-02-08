@@ -9,7 +9,7 @@ export default function Home() {
   const router = useRouter();
 
   const handleContinue = () => {
-    router.push('../(screens)/budget')
+    router.push('../components/Restaurant')
   };
 
   return (
